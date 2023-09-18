@@ -1,65 +1,61 @@
+import { Sequelize } from "sequelize-typescript";
 import Product from "../../../domain/product/entity/product";
+import ProductModel from "../../../infrastructure/product/repository/sequelize/product.model";
 import ProductFactory from "../../../domain/product/factory/product.factory";
 import ProductRepository from "../../../infrastructure/product/repository/sequelize/product.repository";
 import ListProductUseCase from "./list.product.usecase";
 
-const product1 = ProductFactory.create(
-    "a",
-    "Product A",
-    23);
+// const product1 = ProductFactory.create(
+//     "a",
+//     "Product A",
+//     23);
 
-  const product2 = ProductFactory.create(
-    "b",
-    "Product B",
-    77);
+//   const product2 = ProductFactory.create(
+//     "b",
+//     "Product B",
+//     77);
   
-  const MockRepository = () => {
-    return {
-      create: jest.fn(),
-      find: jest.fn(),
-      update: jest.fn(),
-      findAll: jest.fn().mockReturnValue(Promise.resolve([product1, product2])),
-    };
-  };
-
 describe("test Listing product use case", () => {
+  let sequelize: Sequelize;
+
+  beforeEach(async () => {
+    sequelize = new Sequelize({
+      dialect: "sqlite",
+      storage: ":memory:",
+      logging: false,
+      sync: { force: true },
+    });
+
+    await sequelize.addModels([ProductModel]);
+    await sequelize.sync();
+  });
+
+  afterEach(async () => {
+    await sequelize.close();
+  });  
 
     it("should list a product", async () => {
       const productRepository = new ProductRepository();
       const usecase = new ListProductUseCase(productRepository);
   
-      const product1 = new Product("123", "Product 123", 175);
-      const product2 = new Product("123", "Product 123", 175);
+      const product1 = new Product("123", "Product 1", 175);
+      const product2 = new Product("456", "Product 2", 175);
   
       await productRepository.create(product1);
       await productRepository.create(product2);
   
-      const input1 = {
-        id: "123",
-      };
-
-      const input2 = {
-        id: "123",
-      };
-  
       const output1 = {
         id: "123",
-        name: "Product 123",
+        name: "Product 1",
         price: 175
       };
 
       const output2 = {
-        id: "123",
-        name: "Product 123",
+        id: "456",
+        name: "Product 2",
         price: 175
       };
   
-      const result1 = await productRepository.find(input1.id);
-      const result2 = await productRepository.find(input2.id);
-  
-      expect(result1).toEqual(output1);
-      expect(result2).toEqual(output2);
-
       const output = await usecase.execute({});
   
       expect(output.products.length).toBe(2);
