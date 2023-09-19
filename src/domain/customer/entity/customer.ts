@@ -14,6 +14,7 @@ export default class Customer extends Entity {
     this._id = id;
     this._name = name;
     this.validate();
+    
     if (this.notification.hasErrors()) {
       throw new NotificationError(this.notification.getErrors());
     }
