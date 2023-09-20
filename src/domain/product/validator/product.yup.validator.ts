@@ -15,8 +15,9 @@ export default class ProductYupValidator
               name: yup.string().required("Name is required"),
               price: yup
               .number()
-              .integer()
-              .max(10000000000)
+              .test('Is positive?',
+              'Price must be greater than zero',
+              (value) => value > 0)
               .required("Price must be greater than zero"),
             }
         )
